@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "budgetapp"
+version = "0.1.0"
+description = ""
+authors = ["Taylor Moore <github@taylormoore.nz>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <3.12"
+PySide6 = "^6.5.2"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.7.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
