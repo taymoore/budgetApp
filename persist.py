@@ -40,3 +40,6 @@ class PersistSet(MutableSet[T]):
 
     def discard(self, x: T) -> None:
         self.data.discard(x)
+
+    def update(self, x: Set[T]) -> None:
+        self.data.update(x)

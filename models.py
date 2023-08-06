@@ -10,4 +10,8 @@ class Entry(BaseModel):
     date: datetime.date
 
     def __hash__(self) -> int:
+        if self.amount == -461.95:
+            print(self.bank_code)
+            print(self.date)
+            print(self.amount)
         return hash(self.bank_code) + hash(self.date) + hash(self.amount)
