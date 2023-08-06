@@ -9,6 +9,7 @@ from PySide6.QtCore import (
     QEvent,
     QAbstractItemModel,
 )
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -25,7 +26,7 @@ from PySide6.QtWidgets import (
 )
 import sys
 
-from persist import PersistSet
+from persist import PersistSequence
 from models import Entry
 
 
@@ -99,11 +100,11 @@ class MainWindow(QMainWindow):
     class BudgetTableProxyModel(QSortFilterProxyModel):
         def __init__(self, parent: QWidget):
             super().__init__(parent)
-            self.setFilterCaseSensitivity(Qt.CaseInsensitive)
+            self.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
             self.setFilterKeyColumn(-1)
 
     class BudgetTableModel(QAbstractTableModel):
-        def __init__(self, parent: QWidget, budget_data: PersistSet[Entry]):
+        def __init__(self, parent: QWidget, budget_data: PersistSequence[Entry]):
             super().__init__(parent)
             self.table_data: List[List[Any]] = []
             self.budget_data = budget_data
@@ -128,28 +129,13 @@ class MainWindow(QMainWindow):
             if role == Qt.ItemDataRole.EditRole:
                 self.table_data[index.row()][index.column()] = value
                 self.dataChanged.emit(index, index)
-                self.budget_data.add(
-                    Entry(
-                        date=datetime.strptime(
-                            self.table_data[index.row()][0], "%Y-%m-%d"
-                        ),
-                        category=self.table_data[index.row()][1],
-                        sub_category=self.table_data[index.row()][2],
-                        bank_code=self.table_data[index.row()][3],
-                        amount=float(self.table_data[index.row()][4][1:])
-                        if self.table_data[index.row()][4][0] == "$"
-                        else -float(self.table_data[index.row()][4][2:]),
-                    )
-                )
-                # for entry in self.budget_data.data:
-                #     print(entry)
+                if index.column() == 1:
+                    self.budget_data[index.row()].category = value
+                elif index.column() == 2:
+                    self.budget_data[index.row()].sub_category = value
+                print(self.budget_data[index.row()])
                 return True
             return False
-
-        #     self.horizontalHeader().setSectionResizeMode(
-        #         QHeaderView.ResizeMode.ResizeToContents
-        #     )
-        #     self.verticalHeader().hide()
 
         @Slot(Entry)
         def add_entry(self, entry: Entry):
@@ -194,7 +180,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         super().setObjectName("main_window")
 
-        self.budget_data = PersistSet[Entry]("budget_data")
+        self.budget_data = PersistSequence[Entry]("budget_data")
 
         self.setWindowTitle("Budget App")
         self.setMinimumSize(800, 600)
@@ -249,7 +235,11 @@ class MainWindow(QMainWindow):
                 self.budget_table_view.resizeColumnsToContents()
                 self.budget_table_view.resizeRowsToContents()
                 self.budget_table_view.sortByColumn(0, Qt.SortOrder.AscendingOrder)
-                self.budget_data.add(entry)
+                self.budget_data.append(entry)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        self.budget_data.save()
+        return super().closeEvent(event)
 
 
 if __name__ == "__main__":
